@@ -1,12 +1,18 @@
 // Read all csv files in a directory and saves priviews to file with "preview" suffix
-
 package main
 
 import (	
 	"fmt"
+	"strings"
 
 	"io/ioutil"
 	"path/filepath"
+
+	"data/csv"
+)
+
+const (
+	MAX_READ_ROWS = 4
 )
 
 func main() {
@@ -17,14 +23,33 @@ func main() {
 	}
 
 	// Loop through files in active directory
-	for _, a_file := range all_files {
+	for _, active_file := range all_files {
 		
 		// Get file extension of file
-		file_extension := filepath.Ext(a_file.Name())
+		file_extension := filepath.Ext(active_file.Name())
 		
-		// We only care about atomsvc files
-		if file_extension == ".atomsvc" {
-			fmt.Println(a_file.Name())
+		// skip to next file if current file is not .csv
+		if file_extension != ".csv" {
+			continue
 		}
+
+		// set preview file name
+		fmt.Println(strings.Replace(active_file.Name(), ".csv", "_preview.csv", -1))
+
+		// read file data
+		csv_data := csv.New(active_file.Name())
+		read_record_count := 0
+		for csv_data.LoadData(); csv_data.HasMoreRecords; csv_data.LoadNextRecord() {
+
+
+			
+			if read_record_count > MAX_READ_ROWS {
+				break
+			}
+			read_record_count++
+			fmt.Println(csv_data.ActiveRecord)
+		}
+			
+
 	}
 }
