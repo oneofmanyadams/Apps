@@ -15,6 +15,18 @@ const (
 	MAX_READ_ROWS = 4
 )
 
+type PreviewData struct {
+	Columns []PdColumn
+}
+
+type PdColumn struct {
+	Title string
+	Position int
+	ExcelPosition int
+	ExcelColumn string
+	Samples []string
+}
+
 func main() {
 	// Determine all files in active directory
 	all_files, read_dir_err := ioutil.ReadDir("./")
@@ -33,23 +45,32 @@ func main() {
 			continue
 		}
 
-		// set preview file name
-		fmt.Println(strings.Replace(active_file.Name(), ".csv", "_preview.csv", -1))
+		// Set up preview struct
 
 		// read file data
 		csv_data := csv.New(active_file.Name())
 		read_record_count := 0
+
 		for csv_data.LoadData(); csv_data.HasMoreRecords; csv_data.LoadNextRecord() {
+			// record first row as "titles" and title "position"
+			if read_record_count == 0 {
+				position_count := 0
+				for _, title := range csv_data.ActiveRecord {
+					
+					fmt.Println(title)
+					position_count++
+				}
+			}
 
-
-			
+			// Exit loop if row limit is reached.
 			if read_record_count > MAX_READ_ROWS {
 				break
 			}
 			read_record_count++
-			fmt.Println(csv_data.ActiveRecord)
 		}
 			
+		// set preview file name
+		fmt.Println(strings.Replace(active_file.Name(), ".csv", "_preview.csv", -1))
 
 	}
 }
