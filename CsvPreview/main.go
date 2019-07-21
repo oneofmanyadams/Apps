@@ -3,6 +3,7 @@ package main
 
 import (	
 	"fmt"
+	"strconv"
 	"strings"
 
 	"io/ioutil"
@@ -12,7 +13,7 @@ import (
 )
 
 const (
-	MAX_READ_ROWS = 4
+	MAX_READ_ROWS = 3
 )
 
 func main() {
@@ -38,29 +39,76 @@ func main() {
 		read_record_count := 0
 		csv_data := csv.New(active_file.Name())
 		for csv_data.LoadData(); csv_data.HasMoreRecords; csv_data.LoadNextRecord() {
-			// record first row as "titles" and title "position"
+			
 			if read_record_count == 0 {
+			// record first row as "titles" and title "position"
 				position_count := 0
+
 				for _, title := range csv_data.ActiveRecord {
+					// create cata column record, and add all data
+					// 	(except sample data, which is added in next iterations of this loop)	
 					var data_column PdColumn
 					data_column.Title = title
 					data_column.Position = position_count 
 					data_column.ExcelPosition = position_count + 1 
-					position_count++
+					data_column.ExcelColumn = NumberToLetter(position_count + 1)
 					preview_data.Columns = append(preview_data.Columns, data_column)
+
+					position_count++
 				}
+			} else {
+			// Sample data is recorded in this block
+				position_count := 0
+				for _, sample_data := range csv_data.ActiveRecord {
+					preview_data.Columns[position_count].Samples = append(preview_data.Columns[position_count].Samples, sample_data)
+					position_count++
+				}
+			
 			}
 
 			// Exit loop if row limit is reached.
-			if read_record_count > MAX_READ_ROWS {
+			if read_record_count >= MAX_READ_ROWS {
 				break
 			}
 			read_record_count++
 		}
 
 		// set preview file name
-		fmt.Println(strings.Replace(active_file.Name(), ".csv", "_preview.csv", -1))
-		fmt.Println(preview_data)
-		fmt.Println("")
+		preview_file_name := strings.Replace(active_file.Name(), ".csv", "_preview.csv", -1)
+
+		// Create preview csv file
+		preview_file := csv.WriteNewData(preview_file_name)
+
+		// Create header row
+		titles := []string{"Title", "Position", "ExcelPosition", "ExcelColumn"}
+		// Dynamically determine # of samples based on how many iterations of the
+		// number of rows looped through previously
+		for sample_count := 0; sample_count < read_record_count; sample_count++ {
+			titles = append(titles, "Sample "+strconv.Itoa(sample_count+1))
+		}
+
+		// "Add title fow to csv preview data"
+		preview_file.WriteRecord(titles)
+
+		for _, pd_column := range preview_data.Columns {
+			// Add standard data to preview csv row
+			column_list := []string{pd_column.Title,
+				strconv.Itoa(pd_column.Position),
+				strconv.Itoa(pd_column.ExcelPosition),
+				pd_column.ExcelColumn}
+			
+			// Add sample data to csv row
+			for _, pd_column_sample := range pd_column.Samples {
+				column_list = append(column_list, pd_column_sample)
+			}
+
+			// Add row to row to preview data
+			preview_file.WriteRecord(column_list)
+		}
+
+		// Write all preview data to file
+		preview_file.WriteRecordsToFile()
+			
 	}
+
 }
