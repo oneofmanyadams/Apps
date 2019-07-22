@@ -1,6 +1,6 @@
 package main
 
-// Converts a number (starting at 1) to the coresponding row in excel (letters)
+// Converts a number (starting at 1) to the coresponding column in excel (letters)
 // If the number 0 is provided, the character "." will be returned
 func NumberToLetter(number int) (lettervalue string) {
 
@@ -23,7 +23,7 @@ func NumberToLetter(number int) (lettervalue string) {
 	}
 	
 	// We use a "." as the 0th character in the alphabet string for simplicity sake
-	// 	(so that that the A = 1)
+	// 	(so that that the A = 1, B = 2, etc...)
 	alphabet := ".ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 	lettervalue = lettervalue + string(alphabet[number])
 	

@@ -1,4 +1,4 @@
-// Read all csv files in a directory and saves priviews to file with "preview" suffix
+// Read all csv files in a directory and saves priviews to file with "_preview" suffix
 package main
 
 import (	
@@ -14,6 +14,7 @@ import (
 
 const (
 	MAX_READ_ROWS = 3
+	SUFFIX = "_preview"
 )
 
 func main() {
@@ -25,33 +26,47 @@ func main() {
 
 	// Loop through files in active directory
 	for _, active_file := range all_files {
+		// Get file name
+		file_name := active_file.Name()
+
 		// Get file extension of file
-		file_extension := filepath.Ext(active_file.Name())
+		file_extension := filepath.Ext(file_name)
 
 		// skip to next file if current file is not .csv
 		if file_extension != ".csv" {
 			continue
 		}
-		// Set up preview structs
+
+		// Skip to the next file if current file ends in "_preview.csv".
+		// Prevents from creating preview file of a preview file.
+		if len(file_name) > len(SUFFIX+".csv")+1 && (file_name[len(file_name)-len(SUFFIX+".csv"):] == SUFFIX+".csv") {
+			continue
+		}
+
+		// Set up preview structs (from csv_preview.go file)
 		var preview_data PreviewData 
 		
 		// read file data
 		read_record_count := 0
-		csv_data := csv.New(active_file.Name())
+		csv_data := csv.New(file_name)
+		// Loop through each row of csv file
 		for csv_data.LoadData(); csv_data.HasMoreRecords; csv_data.LoadNextRecord() {
 			
 			if read_record_count == 0 {
 			// record first row as "titles" and title "position"
 				position_count := 0
 
+				// Loop through each record in csv row.
 				for _, title := range csv_data.ActiveRecord {
 					// create cata column record, and add all data
 					// 	(except sample data, which is added in next iterations of this loop)	
-					var data_column PdColumn
+					var data_column PdColumn // (from csv_preview.go file)
 					data_column.Title = title
 					data_column.Position = position_count 
 					data_column.ExcelPosition = position_count + 1 
-					data_column.ExcelColumn = NumberToLetter(position_count + 1)
+					data_column.ExcelColumn = NumberToLetter(position_count + 1) // (from helper_functions.go)
+					
+					// Add column record to preview data
 					preview_data.Columns = append(preview_data.Columns, data_column)
 
 					position_count++
@@ -74,12 +89,12 @@ func main() {
 		}
 
 		// set preview file name
-		preview_file_name := strings.Replace(active_file.Name(), ".csv", "_preview.csv", -1)
+		preview_file_name := strings.Replace(file_name, ".csv", SUFFIX+".csv", -1)
 
 		// Create preview csv file
 		preview_file := csv.WriteNewData(preview_file_name)
 
-		// Create header row
+		// Create title row
 		titles := []string{"Title", "Position", "ExcelPosition", "ExcelColumn"}
 		// Dynamically determine # of samples based on how many iterations of the
 		// number of rows looped through previously
@@ -87,7 +102,7 @@ func main() {
 			titles = append(titles, "Sample "+strconv.Itoa(sample_count+1))
 		}
 
-		// "Add title fow to csv preview data"
+		// "Add title row to csv preview data"
 		preview_file.WriteRecord(titles)
 
 		for _, pd_column := range preview_data.Columns {
