@@ -18,6 +18,13 @@ const (
 )
 
 func main() {
+	// testing Number to Letter function.
+	
+	for count := 0; count < 104; count++ {
+		fmt.Println(count, NumberToLetter(count))
+	}
+	
+	
 	// Determine all files in active directory
 	all_files, read_dir_err := ioutil.ReadDir("./")
 	if read_dir_err != nil {
