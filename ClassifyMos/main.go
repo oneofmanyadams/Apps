@@ -20,7 +20,7 @@ func main() {
 	// Load older MO data from json file 
 	existing_mos.LoadFromJsonFile(mos_json_file_location)
 	
-	// Load MO data from Csv file
+	// Load new MO data from Csv file
 	new_mos.LoadFromCsvFile(mos_csv_file_location)
 
 	// Load Classifications
