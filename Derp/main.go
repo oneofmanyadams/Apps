@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"strconv"
 	"time"
 
 	"data/csv"
@@ -16,6 +17,7 @@ type DerpEnv struct {
 	MosCsvFile string
 	MosJsonFile string
 	MoTrackingFile string
+	MoTrackingReportFile string
 	MoClassificationCsvFile string
 
 	DerpStartTime time.Time
@@ -44,7 +46,8 @@ func main() {
 	env.MosJsonFile = env.MosFolder+"/mos.json"
 	env.MoClassificationCsvFile = env.MosFolder+"/mos_classified.csv"
 	env.MoTrackingFile = env.TrackingFolder+"/mo_tracking.json"
-	
+	env.MoTrackingReportFile = env.TrackingFolder+"/mo_tracking_report.csv"
+
 	env.DerpStartTime = time.Now()
 	
 	env.Setup()
@@ -160,6 +163,34 @@ func main() {
 
 	// Save updated existing MOs
 	existing_mos.SaveToJsonFile(env.MosJsonFile)
+
+	// Create and save Mo Tracking report
+	mo_tracking_report := csv.WriteNewData(env.MoTrackingReportFile)
+	mo_tracking_report.WriteRecord([]string{"MO",
+		"Change Number",
+		"Change Type",
+		"Change Time",
+		"Order Qty",
+		"Received Qty",
+		"Priority",
+		"Mo Status",
+		"Material Status",
+		"Start Date"})
+	for mo, change_records := range mo_tracker.ChangesPerMo {
+		for change_number, change := range change_records {
+			mo_tracking_report.WriteRecord([]string{mo,
+				strconv.Itoa(change_number),
+				change.ChangeType,
+				change.ChangeTime.Format("2006-01-02 15:04"),
+				strconv.Itoa(change.CurrentOrderQty),
+				strconv.Itoa(change.CurrentReceivedQty),
+				strconv.Itoa(change.CurrentPriority),
+				strconv.Itoa(change.CurrentMoStatus),
+				strconv.Itoa(change.CurrentMatStatus),
+				change.CurrentStartDate.Format("2006-01-02")})
+		}
+	}
+	mo_tracking_report.WriteRecordsToFile()
 
 	// Save updated MO tracking data
 	mo_tracker.SaveDataToJsonFile(env.MoTrackingFile)
