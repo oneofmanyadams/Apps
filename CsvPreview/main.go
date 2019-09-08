@@ -15,9 +15,13 @@ import (
 const (
 	MAX_READ_ROWS = 3
 	SUFFIX = "_preview"
+	POOL = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 )
 
 func main() {
+	// Create character pool used for making excel columns
+	cp := NewPool(POOL)
+
 	// Determine all files in active directory
 	all_files, read_dir_err := ioutil.ReadDir("./")
 	if read_dir_err != nil {
@@ -64,7 +68,7 @@ func main() {
 					data_column.Title = title
 					data_column.Position = position_count 
 					data_column.ExcelPosition = position_count + 1 
-					data_column.ExcelColumn = NumberToLetter(position_count + 1) // (from helper_functions.go)
+					data_column.ExcelColumn = cp.CharacterFromNumber(position_count) // (from position_calculator.go)
 					
 					// Add column record to preview data
 					preview_data.Columns = append(preview_data.Columns, data_column)
