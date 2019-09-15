@@ -17,7 +17,7 @@ func (cp CharacterPool) CharacterFromNumber(num int) string {
 	}
 
 	if num >= cp.PoolSize {
-		quotent := (int(num) / int(26)) - 1
+		quotent := (int(num) / int(cp.PoolSize)) - 1
 		remainder := num % cp.PoolSize
 		
 		return cp.CharacterFromNumber(quotent) + cp.CharacterFromNumber(remainder)
